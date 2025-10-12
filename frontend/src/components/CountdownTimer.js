@@ -33,42 +33,35 @@ const Separator = styled.span`
   font-size: 1rem;
 `;
 
-const CountdownTimer = ({ targetDate }) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+const CountdownTimer = () => {
+  const targetDate = new Date("2025-10-31T23:59:59").getTime();
+  const [timeLeft, setTimeLeft] = useState(getTimeRemaining());
 
-  // Default to 24 hours from now if no target date provided
-  const target = targetDate || new Date().getTime() + (24 * 60 * 60 * 1000);
+  function getTimeRemaining() {
+    const now = new Date().getTime();
+    const difference = targetDate - now;
+
+    if (difference <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60)
+    };
+  }
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = target - new Date().getTime();
-      
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    const timer = setInterval(() => {
+      setTimeLeft(getTimeRemaining());
+    }, 1000);
 
     return () => clearInterval(timer);
-  }, [target]);
+  }, []);
 
-  const formatTime = (value) => {
-    return value.toString().padStart(2, '0');
-  };
+  const formatTime = (value) => value.toString().padStart(2, '0');
 
   return (
     <TimerContainer>

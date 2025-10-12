@@ -1,183 +1,289 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
-
-const FooterContainer = styled.footer`
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  color: white;
-  padding: 3rem 0 1rem;
-  margin-top: auto;
-`;
-
-const FooterContent = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-`;
-
-const FooterSection = styled.div`
-  h3 {
-    color: #ffd700;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-  }
-  
-  ul {
-    list-style: none;
-  }
-  
-  li {
-    margin-bottom: 0.5rem;
-  }
-  
-  a {
-    color: #ecf0f1;
-    text-decoration: none;
-    transition: color 0.3s ease;
-    
-    &:hover {
-      color: #ffd700;
-    }
-  }
-`;
-
-const FooterBottom = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1rem;
-  text-align: center;
-  color: #bdc3c7;
-`;
-
-const SocialIcons = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  
-  a {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    
-    &:hover {
-      background: #ffd700;
-      color: #2c3e50;
-      transform: translateY(-3px);
-    }
-  }
-`;
-
-const NewsletterForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  
-  input {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    
-    &::placeholder {
-      color: #bdc3c7;
-    }
-  }
-  
-  button {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 5px;
-    background: #ffd700;
-    color: #2c3e50;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    
-    &:hover {
-      background: #f39c12;
-    }
-  }
-`;
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    // Handle newsletter subscription
-    alert('Thank you for subscribing!');
-    e.target.reset();
+  const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+
+  const navigateTo = (path) => {
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <FooterContainer>
-      <FooterContent>
-        <FooterSection>
-          <h3>About Us</h3>
-          <p>
-            We are a leading e-commerce platform providing quality products and exceptional service to our customers worldwide.
-          </p>
-          <SocialIcons>
-            <a href="#" aria-label="Facebook">📘</a>
-            <a href="#" aria-label="Twitter">🐦</a>
-            <a href="#" aria-label="Instagram">📷</a>
-            <a href="#" aria-label="LinkedIn">💼</a>
-          </SocialIcons>
-        </FooterSection>
-        
-        <FooterSection>
-          <h3>Quick Links</h3>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/store">Store</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/gallery">Gallery</Link></li>
-            <li><Link to="/projects">Projects</Link></li>
-            <li><Link to="/movies">Movies</Link></li>
-          </ul>
-        </FooterSection>
-        
-        <FooterSection>
-          <h3>Customer Service</h3>
-          <ul>
-            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-            <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
-            <li><Link to="/contact">Contact Us</Link></li>
-            <li><Link to="/faq">FAQ</Link></li>
-            <li><Link to="/shipping">Shipping Info</Link></li>
-            <li><Link to="/returns">Returns</Link></li>
-          </ul>
-        </FooterSection>
-        
-        <FooterSection>
-          <h3>Newsletter</h3>
-          <p>Subscribe to get special offers and updates</p>
-          <NewsletterForm onSubmit={handleNewsletterSubmit}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button type="submit">Subscribe</button>
-          </NewsletterForm>
-        </FooterSection>
-      </FooterContent>
-      
-      <FooterBottom>
-        <p>&copy; 2024 E-Commerce Platform. All rights reserved.</p>
-      </FooterBottom>
-    </FooterContainer>
+    <>
+      <style>{`
+        .footer {
+          background-color: #000;
+          color: #fff;
+          width: 100%;
+          position: relative;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        .footer-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 40px 80px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .footer-logo {
+          width: 185px;
+        }
+
+        .footer-logo img {
+          width: 98px;
+          height: 174px;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 154px;
+        }
+
+        .links-section,
+        .projects-section {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .links-section h3,
+        .projects-section h3 {
+          font-size: 18px;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .links,
+        .projects {
+          display: flex;
+          flex-direction: column;
+          gap: 19px;
+        }
+
+        .links a,
+        .projects a {
+          color: #fff;
+          text-decoration: none;
+          font-size: 16px;
+          transition: opacity 0.3s ease;
+          cursor: pointer;
+        }
+
+        .links a:hover,
+        .projects a:hover {
+          opacity: 0.8;
+        }
+
+        .social-links {
+          display: flex;
+          gap: 30px;
+          align-items: center;
+        }
+
+        .social-icon {
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .social-icon img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .footer-divider {
+          height: 1px;
+          background-color: #fff;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+
+        .footer-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 80px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .footer-bottom a {
+          color: #fff;
+          text-decoration: none;
+          font-size: 14px;
+          transition: opacity 0.3s ease;
+          cursor: pointer;
+        }
+
+        .footer-bottom a:hover {
+          opacity: 0.8;
+        }
+
+        .footer-bottom p {
+          margin: 0;
+          font-size: 14px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+          .footer-links {
+            gap: 80px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .footer {
+            position: relative;
+            width: 100%;
+          }
+
+          .footer-content {
+            padding: 40px 20px;
+            align-items: center;
+          }
+
+          .footer-content {
+            flex-direction: column;
+            gap: 40px;
+            text-align: center;
+          }
+
+          .footer-logo {
+            display: flex;
+            justify-content: center;
+          }
+
+          .footer-links {
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+          }
+
+          .links-section,
+          .projects-section {
+            align-items: center;
+          }
+
+          .social-links {
+            justify-content: center;
+          }
+
+          .footer-bottom {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+            padding: 20px;
+          }
+
+          .footer-bottom p {
+            order: 1;
+          }
+        }
+      `}</style>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-logo">
+            <a onClick={() => navigateTo("/")} className="logo">
+              <img src="assets/logo/logo.svg" alt="Studio Jatayu Logo" />
+            </a>
+          </div>
+
+          <div className="footer-links">
+            <div className="links-section">
+              <h3>QUICK LINKS</h3>
+              <div className="links">
+                <a onClick={() => navigateTo("/about")}>About</a>
+                <a onClick={() => navigateTo("/gallery")}>Gallery</a>
+                <a onClick={() => navigateTo("/projects")}>Projects</a>
+                <a onClick={() => navigateTo("/store")}>Store</a>
+              </div>
+            </div>
+
+            <div className="projects-section">
+              <h3>PROJECTS</h3>
+              <div className="projects">
+                <a onClick={() => navigateTo("/projects/academy-of-gods")}>Academy of Gods</a>
+                <a onClick={() => navigateTo("/projects/balakanda")}>Balakanda</a>
+                <a onClick={() => navigateTo("/projects/girl-and-the-monster")}>Girl and the Monster</a>
+                <a onClick={() => navigateTo("/projects/dino-and-dyno")}>Dino and Dyno</a>
+              </div>
+            </div>
+          </div>
+
+          <div className="social-links">
+            <a
+              href="https://www.linkedin.com/company/studio-jatayu-pvt-ltd/"
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="assets/icons/linkedin.svg" alt="LinkedIn" />
+            </a>
+            <a
+              href="#"
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="assets/icons/facebook.svg" alt="Facebook" />
+            </a>
+            <a
+              href="https://chat.whatsapp.com/JHV3MB2DnfFB0UpySEWQNJ"
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="assets/icons/whatsapp.svg" alt="WhatsApp" />
+            </a>
+            <a
+              href="https://www.youtube.com/@StudioJatayu"
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="assets/icons/youtube.svg" alt="YouTube" />
+            </a>
+            <a
+              href="https://www.instagram.com/studio_jatayu/"
+              className="social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="assets/icons/instagram.svg" alt="Instagram" />
+            </a>
+          </div>
+        </div>
+
+        <p style={{ textAlign: "center", margin: "10px 0" }}>
+          Email: contact@studiojatayu.com
+        </p>
+
+        <div className="footer-divider"></div>
+
+        <div className="footer-bottom">
+          <a onClick={() => navigateTo("/privacy-policy")}>Privacy Policy</a>
+          <p>Copyright © {currentYear} Studio Jatayu</p>
+          <a onClick={() => navigateTo("/terms-and-conditions")}>
+            Terms & Conditions
+          </a>
+        </div>
+      </footer>
+    </>
   );
 };
 
