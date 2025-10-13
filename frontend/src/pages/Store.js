@@ -1,456 +1,296 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const StoreContainer = styled.div`
+  padding: 2rem;
   max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 20px;
+  margin: 0 auto;
+  background-color: #000000;
+  min-height: 100vh;
 `;
 
 const StoreHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 1rem;
-  }
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #ffffff;
 `;
 
 const StoreTitle = styled.h1`
-  color: #2c3e50;
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
 `;
 
-const SearchAndFilter = styled.div`
+const LoadingSpinnerWrapper = styled.div`
   display: flex;
-  gap: 1rem;
-  align-items: center;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    width: 100%;
-  }
+  justify-content: center;
+  margin: 2rem 0;
 `;
 
-const SearchInput = styled.input`
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 25px;
-  width: 300px;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 `;
 
-const SortSelect = styled.select`
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background: white;
+const Spinner = styled.div`
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #667eea;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: ${spin} 1s linear infinite;
 `;
 
-const FilterButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-`;
-
-const FilterButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: ${props => props.active ? '#667eea' : 'white'};
-  color: ${props => props.active ? 'white' : '#2c3e50'};
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.active ? '#5a67d8' : '#f8f9fa'};
-  }
+const ErrorMessage = styled.div`
+  color: #f44336;
+  text-align: center;
+  margin: 2rem 0;
 `;
 
 const ProductsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
 `;
 
 const ProductCard = styled.div`
-  background: white;
-  border-radius: 10px;
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  border-radius: 9px;
+  width: 288px;
+  height: 400px;
   overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
   transition: transform 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-5px);
   }
 `;
 
 const ProductImage = styled.div`
+  position: relative;
   width: 100%;
   height: 200px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  color: white;
-  position: relative;
+  overflow: hidden;
 `;
 
-const ProductBadge = styled.div`
+const ProductImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const StatusBadge = styled.div`
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #e74c3c;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
   color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: bold;
+  background-color: ${props => {
+    switch(props.status) {
+      case 'in_stock': return '#4CAF50';
+      case 'out_of_stock': return '#f44336';
+      case 'coming_soon': return '#FFA500';
+      default: return '#888';
+    }
+  }};
 `;
 
 const ProductInfo = styled.div`
-  padding: 1.5rem;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
 `;
 
 const ProductTitle = styled.h3`
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+  color: #ffffff;
   font-size: 1.1rem;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.2;
+`;
+
+const ProductType = styled.p`
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
 `;
 
 const ProductPrice = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-const CurrentPrice = styled.span`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #667eea;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 10px 0;
 `;
 
 const OriginalPrice = styled.span`
   text-decoration: line-through;
-  color: #7f8c8d;
-  font-size: 1rem;
+  color: #888;
+  margin-right: 8px;
 `;
 
-const ProductRating = styled.div`
+const DiscountedPrice = styled.span`
+  font-weight: bold;
+  color: #e53935;
+`;
+
+const ProductActions = styled.div`
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  color: #f39c12;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
 `;
 
-const ProductButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const ProductButton = styled.button`
-  flex: 1;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 5px;
+const ActionButton = styled.button`
+  width: 100%;
+  height: 32px;
+  border: 1px solid #ffffff;
+  border-radius: 16px;
+  background: transparent;
+  color: #ffffff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 0.85rem;
   font-weight: 500;
-`;
+  transition: all 0.3s ease;
 
-const AddToCartButton = styled(ProductButton)`
-  background: #667eea;
-  color: white;
-  
   &:hover {
-    background: #5a67d8;
+    background: #ffffff;
+    color: #000000;
   }
 `;
 
-const ViewDetailsButton = styled(Link)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  color: #2c3e50;
-  text-decoration: none;
-  border-radius: 5px;
-  transition: background 0.3s ease;
-  
+const BuyNowButton = styled(ActionButton)`
+  background: #ffffff;
+  color: #000000;
+
   &:hover {
-    background: #e9ecef;
+    background: #f0f0f0;
+    border-color: #f0f0f0;
   }
+`;
+
+const DisabledButton = styled(ActionButton)`
+  border: 1px solid #666666;
+  color: #666666;
+  cursor: not-allowed;
+  border-radius: 18px;
+  height: 36px;
 `;
 
 const NoProducts = styled.div`
   text-align: center;
-  padding: 3rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  color: #000000;
 `;
 
 const Store = () => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Mock product data
-    const mockProducts = [
-      { 
-        id: 1, 
-        name: 'Premium Laptop', 
-        price: 999, 
-        originalPrice: 1299,
-        category: 'Electronics', 
-        rating: 4.5, 
-        reviews: 128,
-        badge: 'Sale',
-        icon: '💻',
-        description: 'High-performance laptop with latest features'
-      },
-      { 
-        id: 2, 
-        name: 'Wireless Headphones', 
-        price: 199, 
-        originalPrice: null,
-        category: 'Audio', 
-        rating: 4.3, 
-        reviews: 89,
-        badge: null,
-        icon: '🎧',
-        description: 'Premium noise-cancelling headphones'
-      },
-      { 
-        id: 3, 
-        name: 'Smart Watch', 
-        price: 299, 
-        originalPrice: 399,
-        category: 'Wearables', 
-        rating: 4.7, 
-        reviews: 234,
-        badge: 'Hot',
-        icon: '⌚',
-        description: 'Feature-rich smartwatch with health tracking'
-      },
-      { 
-        id: 4, 
-        name: 'Camera', 
-        price: 799, 
-        originalPrice: null,
-        category: 'Electronics', 
-        rating: 4.8, 
-        reviews: 156,
-        badge: null,
-        icon: '📷',
-        description: 'Professional DSLR camera'
-      },
-      { 
-        id: 5, 
-        name: 'Tablet', 
-        price: 499, 
-        originalPrice: 599,
-        category: 'Electronics', 
-        rating: 4.4, 
-        reviews: 98,
-        badge: 'Sale',
-        icon: '📱',
-        description: 'High-resolution tablet for work and entertainment'
-      },
-      { 
-        id: 6, 
-        name: 'Gaming Console', 
-        price: 399, 
-        originalPrice: null,
-        category: 'Gaming', 
-        rating: 4.6, 
-        reviews: 312,
-        badge: 'New',
-        icon: '🎮',
-        description: 'Latest gaming console with 4K support'
-      },
-      { 
-        id: 7, 
-        name: 'Bluetooth Speaker', 
-        price: 79, 
-        originalPrice: null,
-        category: 'Audio', 
-        rating: 4.2, 
-        reviews: 67,
-        badge: null,
-        icon: '🔊',
-        description: 'Portable waterproof speaker'
-      },
-      { 
-        id: 8, 
-        name: 'Fitness Tracker', 
-        price: 149, 
-        originalPrice: 199,
-        category: 'Wearables', 
-        rating: 4.1, 
-        reviews: 145,
-        badge: 'Sale',
-        icon: '🏃',
-        description: 'Advanced fitness and health tracker'
-      },
-    ];
-    
-    setProducts(mockProducts);
-    setFilteredProducts(mockProducts);
+    // Mock async product fetch
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const mockProducts = [
+          { id:1, name:'Premium Laptop', type:'Electronics', price:999, imageUrl:'https://via.placeholder.com/300', status:'in_stock' },
+          { id:2, name:'Wireless Headphones', type:'Audio', price:199, imageUrl:'https://via.placeholder.com/300', status:'out_of_stock' },
+          { id:3, name:'Smart Watch', type:'Wearables', price:299, imageUrl:'https://via.placeholder.com/300', status:'coming_soon' },
+        ];
+        await new Promise(res => setTimeout(res, 1000)); // simulate loading
+        setProducts(mockProducts);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load products');
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
-  useEffect(() => {
-    let filtered = products;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
-    // Sort products
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'rating':
-          return b.rating - a.rating;
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredProducts(filtered);
-  }, [products, searchTerm, selectedCategory, sortBy]);
-
-  const categories = ['all', 'Electronics', 'Audio', 'Wearables', 'Gaming'];
-
   const handleAddToCart = (product) => {
+    if(product.status !== 'in_stock') return;
     addToCart(product);
+    alert('Added to cart');
   };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('⭐');
-    }
-    if (hasHalfStar) {
-      stars.push('✨');
-    }
-    for (let i = stars.length; i < 5; i++) {
-      stars.push('☆');
-    }
-    
-    return stars.join('');
+  const handleBuyNow = (product) => {
+    if(product.status !== 'in_stock') return;
+    addToCart(product);
+    navigate('/checkout');
+  };
+
+  const handleImageError = (e) => {
+    e.target.src = 'https://via.placeholder.com/300';
   };
 
   return (
     <StoreContainer>
       <StoreHeader>
-        <StoreTitle>Our Store</StoreTitle>
-        <SearchAndFilter>
-          <SearchInput
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <SortSelect value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="name">Sort by Name</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Highest Rated</option>
-          </SortSelect>
-        </SearchAndFilter>
+        <StoreTitle>OUR PRODUCTS</StoreTitle>
       </StoreHeader>
 
-      <FilterButtons>
-        {categories.map(category => (
-          <FilterButton
-            key={category}
-            active={selectedCategory === category}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-          </FilterButton>
-        ))}
-      </FilterButtons>
+      {loading && (
+        <LoadingSpinnerWrapper>
+          <Spinner />
+        </LoadingSpinnerWrapper>
+      )}
 
-      {filteredProducts.length === 0 ? (
-        <NoProducts>
-          <h3>No products found</h3>
-          <p>Try adjusting your search or filter criteria</p>
-        </NoProducts>
-      ) : (
-        <ProductsGrid>
-          {filteredProducts.map(product => (
-            <ProductCard key={product.id}>
-              <ProductImage>
-                {product.icon}
-                {product.badge && (
-                  <ProductBadge>{product.badge}</ProductBadge>
-                )}
-              </ProductImage>
-              <ProductInfo>
-                <ProductTitle>{product.name}</ProductTitle>
-                <ProductPrice>
-                  <CurrentPrice>${product.price}</CurrentPrice>
-                  {product.originalPrice && (
-                    <OriginalPrice>${product.originalPrice}</OriginalPrice>
-                  )}
-                </ProductPrice>
-                <ProductRating>
-                  <span>{renderStars(product.rating)}</span>
-                  <span>({product.reviews})</span>
-                </ProductRating>
-                <ProductButtons>
-                  <AddToCartButton onClick={() => handleAddToCart(product)}>
-                    Add to Cart
-                  </AddToCartButton>
-                  <ViewDetailsButton to={`/product/${product.id}`}>
-                    View Details
-                  </ViewDetailsButton>
-                </ProductButtons>
-              </ProductInfo>
-            </ProductCard>
-          ))}
-        </ProductsGrid>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+
+      {!loading && !error && (
+        <>
+          {products.length === 0 ? (
+            <NoProducts>No products available at the moment.</NoProducts>
+          ) : (
+            <ProductsGrid>
+              {products.map(product => (
+                <ProductCard key={product.id}>
+                  <ProductImage>
+                    <ProductImg src={product.imageUrl} alt={product.name} onError={handleImageError} />
+                    <StatusBadge status={product.status}>
+                      {product.status === 'in_stock' ? 'In Stock' : product.status === 'out_of_stock' ? 'Out of Stock' : 'Coming Soon'}
+                    </StatusBadge>
+                  </ProductImage>
+                  <ProductInfo>
+                    <ProductTitle>{product.name}</ProductTitle>
+                    <ProductType>{product.type}</ProductType>
+                    <ProductPrice>
+                      <OriginalPrice>₹{product.price}</OriginalPrice>
+                      <DiscountedPrice>₹{product.price}</DiscountedPrice>
+                    </ProductPrice>
+                    <ProductActions>
+                      {product.status === 'in_stock' ? (
+                        <>
+                          <ActionButton onClick={() => handleAddToCart(product)}>Add to Cart</ActionButton>
+                          <BuyNowButton onClick={() => handleBuyNow(product)}>Buy Now</BuyNowButton>
+                        </>
+                      ) : (
+                        <DisabledButton disabled>{product.status === 'coming_soon' ? 'Coming Soon' : 'Out of Stock'}</DisabledButton>
+                      )}
+                    </ProductActions>
+                  </ProductInfo>
+                </ProductCard>
+              ))}
+            </ProductsGrid>
+          )}
+        </>
       )}
     </StoreContainer>
   );

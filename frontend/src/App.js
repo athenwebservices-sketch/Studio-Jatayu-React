@@ -28,6 +28,7 @@ import Store from './pages/Store';
 import TermsAndConditions from './pages/TermsAndConditions';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
+import Login from './pages/Login';
 
 // Context
 import { CartProvider } from './context/CartContext';
@@ -58,6 +59,7 @@ function App() {
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
               <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/user-profile" element={<UserProfile />} />
+              <Route path="/login" element={<Login />} />
             </Routes>
             <Footer />
             <ToastContainer
