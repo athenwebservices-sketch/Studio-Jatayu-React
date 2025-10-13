@@ -1,171 +1,403 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+// projects.js
 
+import React, { useState } from "react";
+import styled, { keyframes } from "styled-components";
+
+// ============ Styled Components (CSS-in-JS) ===================
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+// 🔹 Main Container with dark gradient background
 const GalleryContainer = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0b0b0b 0%, #000 100%);
+  color: #f5f5f5;
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 0 auto;
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 0;
+  }
+`;
+
+const SideNav = styled.nav`
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(15, 15, 15, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    @media (max-width: 768px) {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      justify-items: center;
+    }
+
+    @media (max-width: 480px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  li {
+    margin: 10px 0;
+    cursor: pointer;
+    color: #ddd;
+    font-weight: 500;
+    transition: color 0.3s, transform 0.3s;
+
+    &:hover {
+      color: #ff6b6b;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      text-align: center;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      width: 100%;
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    position: static;
+    transform: none;
+    width: 100%;
+    border-radius: 0;
+  }
+`;
+
+const GalleryContent = styled.main`
+  flex: 1;
+  margin-left: 220px;
+  padding: 0 20px;
+
+  @media (max-width: 768px) {
+    margin-left: 0;
+    padding: 0;
+  }
+`;
+
+const HeroSection = styled.section`
+  text-align: center;
+  margin-bottom: 60px;
+
+  h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  }
+
+  p {
+    font-size: 1.2rem;
+    color: #bbb;
+  }
+`;
+
+const EventsContainer = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 0 20px;
 `;
 
-const GalleryTitle = styled.h1`
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 2rem;
+const EventSection = styled.section`
+  margin-bottom: 80px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: ${fadeInUp} 0.6s ease forwards;
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #fff;
+    text-align: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    display: inline-block;
+    padding-bottom: 5px;
+  }
+
+  @media (max-width: 768px) {
+    h2 {
+      font-size: 1.8rem;
+    }
+  }
 `;
 
-const GalleryGrid = styled.div`
+const EventGallery = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    width: 80%;
+    margin: 0 10%;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
 `;
 
 const GalleryItem = styled.div`
   position: relative;
-  border-radius: 10px;
+  cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  
+  border-radius: 8px;
+  aspect-ratio: 1;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
   &:hover {
-    transform: translateY(-5px);
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 `;
 
-const GalleryImage = styled.div`
+// Lightbox Styles
+const LightboxOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 250px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100%;
+  background: rgba(10, 10, 10, 0.95);
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  color: white;
+  z-index: 2000;
+  backdrop-filter: blur(6px);
 `;
 
-const GalleryInfo = styled.div`
-  padding: 1rem;
-  background: white;
-`;
-
-const GalleryItemTitle = styled.h3`
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-`;
-
-const GalleryItemDescription = styled.p`
-  color: #7f8c8d;
-  font-size: 0.9rem;
-`;
-
-const FilterButtons = styled.div`
+const LightboxContent = styled.div`
+  position: relative;
+  max-width: 90%;
+  max-height: 90vh;
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-`;
+  flex-direction: column;
+  align-items: center;
 
-const FilterButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: ${props => props.active ? '#667eea' : 'white'};
-  color: ${props => props.active ? 'white' : '#2c3e50'};
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.active ? '#5a67d8' : '#f8f9fa'};
+  img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+
+  .caption {
+    color: #fff;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 1rem;
+    opacity: 0.85;
   }
 `;
 
-const LoadMoreButton = styled.div`
-  text-align: center;
-  margin-top: 2rem;
-`;
-
-const Button = styled.button`
-  padding: 1rem 2rem;
-  background: #667eea;
-  color: white;
+const NavButton = styled.button`
+  position: absolute;
+  top: 50%;
+  background: none;
   border: none;
-  border-radius: 5px;
+  color: white;
+  font-size: 30px;
   cursor: pointer;
-  transition: background 0.3s ease;
-  
-  &:hover {
-    background: #5a67d8;
+  transform: translateY(-50%);
+  z-index: 1001;
+
+  &.prev {
+    left: 20px;
+  }
+  &.next {
+    right: 20px;
   }
 `;
 
+const CloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+`;
+
+// ============ Lightbox Component =============
+const Lightbox = ({ images, currentIndex, onClose, onNext, onPrev }) => {
+  if (!images.length) return null;
+  return (
+    <LightboxOverlay onClick={onClose}>
+      <LightboxContent onClick={(e) => e.stopPropagation()}>
+        <img src={images[currentIndex].src} alt={images[currentIndex].caption} />
+        <div className="caption">{images[currentIndex].caption}</div>
+        <NavButton className="prev" onClick={onPrev}>
+          ❮
+        </NavButton>
+        <NavButton className="next" onClick={onNext}>
+          ❯
+        </NavButton>
+        <CloseButton onClick={onClose}>✕</CloseButton>
+      </LightboxContent>
+    </LightboxOverlay>
+  );
+};
+
+// =================== Main Gallery Component ====================
 const Gallery = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [items, setItems] = useState([
-    { id: 1, title: 'Product Showcase', category: 'products', description: 'Latest product collection', icon: '📱' },
-    { id: 2, title: 'Team Building', category: 'events', description: 'Company team activities', icon: '👥' },
-    { id: 3, title: 'Office Space', category: 'office', description: 'Our modern workspace', icon: '🏢' },
-    { id: 4, title: 'Technology', category: 'tech', description: 'Cutting-edge solutions', icon: '💻' },
-    { id: 5, title: 'Customer Success', category: 'customers', description: 'Happy customers', icon: '😊' },
-    { id: 6, title: 'Innovation Lab', category: 'tech', description: 'R&D department', icon: '🔬' },
-    { id: 7, title: 'Product Launch', category: 'events', description: 'New product release', icon: '🚀' },
-    { id: 8, title: 'Meeting Room', category: 'office', description: 'Collaboration space', icon: '🤝' },
-    { id: 9, title: 'Awards', category: 'achievements', description: 'Our achievements', icon: '🏆' },
-  ]);
+  const events = [
+    {
+      id: "comicstreet",
+      title: "Comic Street Hyderabad – 2025",
+      folderPath: "comicstreet",
+      images: Array.from({ length: 20 }, (_, i) => `comicstreet-${i + 1}.jpg`),
+    },
+    {
+      
+      id: "gafx",
+      title: "GAFX Bengaluru – 2025",
+      folderPath: "gafx",
+      images: Array.from({ length: 14 }, (_, i) => `gafx-${i + 1}.jpg`),
+    },
+    {
+      id: "iit-madras",
+      title: "IIT Madras – 2025",
+      folderPath: "iit-madras",
+      images: Array.from({ length: 4 }, (_, i) => `iit-madras-${i + 1}.jpg`),
+    },
+    {
+      id: "indiajoy",
+      title: "India Joy Hyderabad – 2024",
+      folderPath: "indiajoy",
+      images: Array.from({ length: 6 }, (_, i) => `indiajoy-${i + 1}.jpg`),
+    },
+    {
+      id: "tie",
+      title: "TIE Global Summit Bengaluru – 2024",
+      folderPath: "tie",
+      images: Array.from({ length: 7 }, (_, i) => `tie-${i + 1}.jpg`),
+    },
+  ];
 
-  const categories = ['all', 'products', 'events', 'office', 'tech', 'customers', 'achievements'];
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const filteredItems = activeFilter === 'all' 
-    ? items 
-    : items.filter(item => item.category === activeFilter);
-
-  const handleFilterChange = (category) => {
-    setActiveFilter(category);
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
-  const loadMore = () => {
-    // Simulate loading more items
-    const newItems = [
-      { id: items.length + 1, title: 'New Item 1', category: 'products', description: 'Description', icon: '📦' },
-      { id: items.length + 2, title: 'New Item 2', category: 'events', description: 'Description', icon: '🎉' },
-    ];
-    setItems([...items, ...newItems]);
+  const openLightbox = (eventId, imgIndex) => {
+    const currentEvent = events.find((e) => e.id === eventId);
+    if (!currentEvent) return;
+
+    const imgs = currentEvent.images.map((img) => ({
+      src: `assets/gallery/${currentEvent.folderPath}/${img}`,
+      caption: `${currentEvent.title} - ${img}`,
+    }));
+
+    setLightboxImages(imgs);
+    setCurrentIndex(imgIndex);
+    setIsLightboxOpen(true);
+  };
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % lightboxImages.length);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) =>
+      prev === 0 ? lightboxImages.length - 1 : prev - 1
+    );
   };
 
   return (
     <GalleryContainer>
-      <GalleryTitle>Gallery</GalleryTitle>
-      
-      <FilterButtons>
-        {categories.map(category => (
-          <FilterButton
-            key={category}
-            active={activeFilter === category}
-            onClick={() => handleFilterChange(category)}
-          >
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-          </FilterButton>
-        ))}
-      </FilterButtons>
+      <SideNav>
+        <ul>
+          {events.map((e) => (
+            <li key={e.id} onClick={() => scrollToSection(e.id)}>
+              {e.title}
+            </li>
+          ))}
+        </ul>
+      </SideNav>
 
-      <GalleryGrid>
-        {filteredItems.map(item => (
-          <GalleryItem key={item.id}>
-            <GalleryImage>{item.icon}</GalleryImage>
-            <GalleryInfo>
-              <GalleryItemTitle>{item.title}</GalleryItemTitle>
-              <GalleryItemDescription>{item.description}</GalleryItemDescription>
-            </GalleryInfo>
-          </GalleryItem>
-        ))}
-      </GalleryGrid>
+      <GalleryContent>
+        <HeroSection>
+          <h1>OUR GALLERY</h1>
+          <p>Explore our journey through events</p>
+        </HeroSection>
 
-      <LoadMoreButton>
-        <Button onClick={loadMore}>Load More</Button>
-      </LoadMoreButton>
+        <EventsContainer>
+          {events.map((event) => (
+            <EventSection id={event.id} key={event.id}>
+              <h2>{event.title}</h2>
+              <EventGallery>
+                {event.images.map((img, index) => (
+                  <GalleryItem
+                    key={index}
+                    onClick={() => openLightbox(event.id, index)}
+                  >
+                    <img
+                      src={`assets/gallery/${event.folderPath}/${img}`}
+                      alt={img}
+                      loading="lazy"
+                    />
+                  </GalleryItem>
+                ))}
+              </EventGallery>
+            </EventSection>
+          ))}
+        </EventsContainer>
+      </GalleryContent>
+
+      {isLightboxOpen && (
+        <Lightbox
+          images={lightboxImages}
+          currentIndex={currentIndex}
+          onClose={() => setIsLightboxOpen(false)}
+          onNext={handleNext}
+          onPrev={handlePrev}
+        />
+      )}
     </GalleryContainer>
   );
 };
 
 export default Gallery;
+
+
+
