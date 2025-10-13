@@ -1,18 +1,21 @@
-Enterprise Backend (Express + Mongoose) generated.
-- API key required on all routes: send header 'x-api-key: enterprisemediumtoken12345'
-- Auth flow requires API key header + OTP verification. After verify, use returned JWT in Authorization: Bearer <token>
-- Roles: customer, admin, superadmin
-  - customer: create orders, view own orders/payments, manage own profile
-  - admin: manage products, view all orders/payments, manage users (not delete)
-  - superadmin: full access including deleting users/payments and creating other admins
+Enterprise Backend Complete
 
-Important endpoints:
-- POST /api/auth/register  (requires x-api-key) -> {name,email,password,role} (role allowed only if x-creator-role=superadmin)
-- POST /api/auth/verify-otp (requires x-api-key) -> {email, otp} returns JWT
-- POST /api/auth/login (requires x-api-key) -> {email,password} returns JWT
-- All other routes require x-api-key header AND Authorization: Bearer <JWT>
-
-Start:
-1. cd backend_enterprise
+Run:
+1. cd backend_enterprise_complete
 2. npm install
-3. npm run dev or npm start
+3. Edit .env (Mongo URI, API_KEY, JWT secret)
+4. npm run dev
+
+Security notes:
+- All requests require header x-api-key: enterprisemediumtoken12345 (or change .env)
+- After login/verify you'll receive a JWT. Protected routes require Authorization: Bearer <token>
+- Sessions are tracked server-side to implement sliding 1-hour inactivity expiry.
+
+Main folders:
+- models: Mongoose models
+- controllers: route handlers
+- routes: Express routes
+- middleware: auth/error
+- utils: multer file uploader
+
+This package is intentionally self-contained and uses local filesystem for uploads and console for OTP/password reset tokens. Replace these with real email/payment providers for production.

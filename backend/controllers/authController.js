@@ -1,14 +1,14 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwtConfig');
+const Session = require('../models/sessionModel');
+const { v4: uuidv4 } = require('uuid');
 
-const signToken = (user) => {
-  return jwt.sign({ id: user._id, email: user.email, role: user.role }, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn });
-};
+const signToken = (user) => jwt.sign({ id: user._id, email: user.email, role: user.role }, jwtConfig.secret);
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
     if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
@@ -16,79 +16,65 @@ exports.register = async (req, res, next) => {
     let finalRole = 'customer';
     if (role && role !== 'customer') {
       const creatorRole = req.headers['x-creator-role'];
-      if (creatorRole !== 'superadmin') {
-        return res.status(403).json({ message: 'Only Super Admin can create non-customer users' });
-      }
+      if (creatorRole !== 'superadmin') return res.status(403).json({ message: 'Only Super Admin can create non-customer users' });
       finalRole = role;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10*60*1000);
-
-    const user = new User({ name, email, password, role: finalRole, otp, otpExpires, isVerified: false });
+    const user = new User({ firstName, lastName, email, role: finalRole });
+    await user.setPassword(password);
     await user.save();
 
-    console.log('==== Registration OTP for', email, 'is:', otp, ' (valid for 10 minutes) ====');
+    const otp = Math.floor(100000 + Math.random()*900000).toString();
+    const sessionToken = uuidv4();
+    const session = new Session({ userId: user._id, token: sessionToken, lastUsedAt: new Date() });
+    await session.save();
 
-    return res.status(201).json({ message: 'User created. Check server console for OTP to verify.',otp });
-  } catch (err) {
-    next(err);
-  }
+    console.log('Registration OTP for', email, 'is:', otp);
+    res.status(201).json({ message: 'User created. OTP sent to email (console). Use /verify-otp with otp and sessionToken.', sessionToken });
+  } catch (err) { next(err); }
 };
 
 exports.verifyOtp = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
+    const { email, otp, sessionToken } = req.body;
+    if (!email || !otp || !sessionToken) return res.status(400).json({ message: 'email, otp and sessionToken required' });
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'User not found' });
-    if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
-    if (!user.otp || user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
-    if (user.otpExpires < new Date()) return res.status(400).json({ message: 'OTP expired' });
+    const session = await Session.findOne({ token: sessionToken, userId: user._id });
+    if (!session) return res.status(400).json({ message: 'Invalid session token' });
 
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
+    user.isEmailVerified = true;
     await user.save();
 
-    const token = signToken(user);
-    return res.status(200).json({ message: 'Verified', token });
-  } catch (err) {
-    next(err);
-  }
+    const jwtToken = signToken(user);
+    session.token = jwtToken;
+    session.lastUsedAt = new Date();
+    await session.save();
+
+    res.json({ token: jwtToken });
+  } catch (err) { next(err); }
 };
 
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ message: 'Email and password required' });
-
+    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: 'Invalid credentials' });
-
-    if (!user.isVerified)
-      return res.status(400).json({ message: 'Account not verified. Please verify OTP.' });
-
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
     const isMatch = await user.matchPassword(password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = signToken(user);
+    const jwtToken = signToken(user);
+    const session = new Session({ userId: user._id, token: jwtToken, lastUsedAt: new Date() });
+    await session.save();
+    res.json({ token: jwtToken });
+  } catch (err) { next(err); }
+};
 
-    // ✅ Final response structure
-    res.status(200).json({
-      message: 'Login successful',
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        role: user.role
-      }
-    });
-  } catch (err) {
-    next(err);
-  }
-
+exports.logout = async (req, res, next) => {
+  try {
+    const token = (req.headers.authorization||'').split(' ')[1];
+    if (token) await Session.deleteOne({ token });
+    res.json({ message: 'Logged out' });
+  } catch (err) { next(err); }
 };

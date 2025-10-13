@@ -1,26 +1,34 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+const addressSchema = new mongoose.Schema({
+  type: { type: String, enum: ['shipping','billing','both'], default: 'shipping' },
+  isDefault: { type: Boolean, default: false },
+  street: String, city: String, state: String, zipCode: String, country: String
+}, { _id: true });
+
+const paymentMethodSchema = new mongoose.Schema({
+  type: String, provider: String, providerToken: String, last4Digits: String, cardBrand: String,
+  expiryMonth: Number, expiryYear: Number, isDefault: Boolean
+}, { _id: true });
+
 const userSchema = new mongoose.Schema({
-  name: { type: String },
-  email: { type: String, required: true, unique: true },
-  password: { type: String },
-  role: { type: String, enum: ['customer','admin','superadmin'], default: 'customer' },
-  isVerified: { type: Boolean, default: false },
-  otp: { type: String },
-  otpExpires: { type: Date },
-  createdAt: { type: Date, default: Date.now }
+  firstName: String, lastName: String, email: { type: String, required: true, unique: true },
+  passwordHash: String, role: { type: String, enum: ['customer','admin','superadmin'], default: 'customer' },
+  isActive: { type: Boolean, default: true }, isEmailVerified: { type: Boolean, default: false },
+  lastLoginAt: Date, profileImage: String, phone: String,
+  addresses: [addressSchema], paymentMethods: [paymentMethodSchema],
+  createdAt: { type: Date, default: Date.now }, updatedAt: Date
 });
 
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+userSchema.methods.setPassword = async function(password) {
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+  this.passwordHash = await bcrypt.hash(password, salt);
+};
 
-userSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.matchPassword = async function(password) {
+  const bcrypt = require('bcrypt');
+  return await bcrypt.compare(password, this.passwordHash || '');
 };
 
 module.exports = mongoose.model('User', userSchema);
