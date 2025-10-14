@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../lib/axiosInstance';
 
 const AuthContext = createContext();
 
@@ -24,6 +24,15 @@ const authReducer = (state, action) => {
         error: action.payload
       };
     case 'LOGOUT':
+      return {
+        ...state,
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        loading: false,
+        error: null
+      };
+    case 'LOGIN_BLANK':
       return {
         ...state,
         isAuthenticated: false,
@@ -115,7 +124,12 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
+  const loginFailure = () =>{
+    dispatch({
+        type: 'LOGIN_BLANK',
+        payload: 'LOGIN_BLANK'
+      });
+  }
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
@@ -133,7 +147,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        clearError
+        clearError,
+        loginFailure
       }}
     >
       {children}

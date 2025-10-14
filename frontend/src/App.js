@@ -28,7 +28,7 @@ import Store from './pages/Store';
 import TermsAndConditions from './pages/TermsAndConditions';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
-import Login from './pages/Login';
+import Login from './containers/Login';
 
 // Context
 import { CartProvider } from './context/CartContext';
