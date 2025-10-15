@@ -5,6 +5,7 @@ const Session = require('../models/sessionModel');
 const { v4: uuidv4 } = require('uuid');
 
 const signToken = (user) => jwt.sign({ id: user._id, email: user.email, role: user.role }, jwtConfig.secret);
+const sendMail = require('../config/mailConfig');
 
 exports.register = async (req, res, next) => {
   try {
@@ -25,11 +26,17 @@ exports.register = async (req, res, next) => {
           { token: sessionToken, lastUsedAt: new Date() },
           { upsert: true, new: true }
         );
-
+        await sendMail({
+  to: email,
+  subject: 'Your OTP for Registration',
+  text: `Your OTP is: ${otp}`,
+  html: `<p>Your OTP is: <b>${otp}</b></p>`,
+});
         console.log('Registration OTP for', email, 'is:', otp);
         return res.status(400).json({
           message: 'User already exists but not verified. OTP sent again.',
           sessionToken,
+          otp:otp
         });
       }
       return res.status(400).json({ message: 'User already exists and is verified.' });
@@ -52,7 +59,19 @@ exports.register = async (req, res, next) => {
     const sessionToken = uuidv4();
     const session = new Session({ userId: user._id, token: sessionToken, lastUsedAt: new Date() });
     await session.save();
+    await sendMail({
+  to: email,
+  subject: 'Your OTP for Registration',
+  text: `Your OTP is: ${otp}`,
+  html: `<p>Your OTP is: <b>${otp}</b></p>`,
+});
 
+console.log(`Registration OTP sent to ${email}`);
+res.status(201).json({
+  message: 'User created. OTP sent to email. Use /verify-otp with otp and sessionToken.',
+  sessionToken,
+  otp // you can remove this in production
+});
     console.log('Registration OTP for', email, 'is:', otp);
     res.status(201).json({
       message: 'User created. OTP sent to email (console). Use /verify-otp with otp and sessionToken.',
