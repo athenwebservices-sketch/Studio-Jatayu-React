@@ -17,7 +17,7 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
 const adminGalleryRoutes = require('./routes/adminGalleryRoutes');
-
+const razorpayRoutes = require('./routes/razorPayRoutes');
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 
@@ -41,7 +41,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/galleries', galleryRoutes);
 app.use('/api/admin', adminGalleryRoutes);
-
+app.use('/api/razorpay', razorpayRoutes);
 
 app.use(errorHandler);
 
