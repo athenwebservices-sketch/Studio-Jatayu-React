@@ -18,6 +18,7 @@ const passwordRoutes = require('./routes/passwordRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
 const adminGalleryRoutes = require('./routes/adminGalleryRoutes');
 const razorpayRoutes = require('./routes/razorPayRoutes');
+const googleLoginRoutes = require('./routes/googleLoginRoutes');
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 
@@ -42,6 +43,7 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/galleries', galleryRoutes);
 app.use('/api/admin', adminGalleryRoutes);
 app.use('/api/razorpay', razorpayRoutes);
+app.use('/api/gauth', googleLoginRoutes);
 
 app.use(errorHandler);
 
