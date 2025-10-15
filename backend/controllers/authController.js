@@ -104,7 +104,7 @@ exports.login = async (req, res, next) => {
     const jwtToken = signToken(user);
     const session = new Session({ userId: user._id, token: jwtToken, lastUsedAt: new Date() });
     await session.save();
-    res.json({ token: jwtToken });
+    res.json({ token: jwtToken ,user:user});
   } catch (err) {
     next(err);
   }
