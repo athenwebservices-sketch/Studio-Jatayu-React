@@ -100,7 +100,7 @@ exports.verifyOtp = async (req, res, next) => {
     session.lastUsedAt = new Date();
     await session.save();
 
-    res.json({ token: jwtToken });
+    res.json({ token: jwtToken,user:user });
   } catch (err) { next(err); }
 };
 
