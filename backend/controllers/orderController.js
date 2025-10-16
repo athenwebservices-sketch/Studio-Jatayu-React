@@ -10,8 +10,11 @@ exports.createOrder = async (req,res,next)=>{
     const { items, shippingAddress, billingAddress, paymentMethod, currency } = req.body;
     if(!items || !items.length) return res.status(400).json({message:'No items'});
     let subtotal = 0; const orderItems = [];
+    console.log(items)
     for(const it of items){
+      console.log(it)
       const p = await Product.findById(it.productId);
+      console.log(p);
       if(!p) return res.status(400).json({message:'Product not found'});
       const price = p.price; subtotal += price * (it.quantity||1);
       orderItems.push({ productId:p._id, variantId: it.variantId, productName:p.name, productImage:p.imageUrls && p.imageUrls[0] && p.imageUrls[0].url, quantity: it.quantity||1, price });
