@@ -25,22 +25,79 @@ exports.createOrder = async (req,res,next)=>{
   }catch(e){next(e)}
 };
 
-exports.list = async (req,res,next)=>{
-  try{
-    const page = Math.max(1, parseInt(req.query.page||'1'));
-    const limit = Math.max(1, parseInt(req.query.limit||'20'));
-    const skip = (page-1)*limit;
-    if(req.user.role==='customer'){
+exports.updateStatusByNumber = async (req, res, next) => {
+  try {
+    const { orderNumber } = req.params;
+    if (!orderNumber) {
+      return res.status(400).json({ message: 'Order number is required' });
+    }
+
+    // Find the order by its unique orderNumber
+    const order = await Order.findOne({ orderNumber: orderNumber });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found with that number' });
+    }
+
+    // --- REVISED PERMISSION CHECK ---
+    // If the user is a customer, ensure they own the order.
+    // If the user is an admin (or other non-customer role), they are allowed.
+    console.log(order.userId.toString())
+    console.log(req.user._id.toString())
+    if (req.user.role === 'customer' && order.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this order' });
+    }
+
+    // Update the status from the request body
+    const { status } = req.body;
+    if (!status) {
+        return res.status(400).json({ message: 'Status is required in the request body' });
+    }
+
+    // NOTE: You might want to add business logic here to restrict
+    // which statuses a customer can set (e.g., they can only set it to 'cancelled').
+    // For now, this allows any status update for the owner or an admin.
+    order.status = status;
+
+    await order.save();
+
+    // Return the updated order as a plain object
+    res.json(order.toObject());
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.list = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || '1'));
+    const limit = Math.max(1, parseInt(req.query.limit || '20'));
+    const skip = (page - 1) * limit;
+
+    // Always sort by 'createdAt' in descending order (most recent first)
+    const sortOrder = -1;  // -1 for descending order
+
+    if (req.user.role === 'customer') {
       const total = await Order.countDocuments({ userId: req.user._id });
-      const orders = await Order.find({ userId: req.user._id }).skip(skip).limit(limit);
+      const orders = await Order.find({ userId: req.user._id })
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: sortOrder });  // Sort by createdAt, descending
       res.json({ page, limit, total, orders });
     } else {
       const total = await Order.countDocuments();
-      const orders = await Order.find().skip(skip).limit(limit).populate('userId','firstName lastName email');
+      const orders = await Order.find()
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: sortOrder })  // Sort by createdAt, descending
+        .populate('userId', 'firstName lastName email');
       res.json({ page, limit, total, orders });
     }
-  }catch(e){next(e)}
+  } catch (e) {
+    next(e);
+  }
 };
+
 
 exports.get = async (req,res,next)=>{
   try{ const order = await Order.findById(req.params.id); if(!order) return res.status(404).end(); if(req.user.role==='customer' && order.userId.toString()!==req.user._id.toString()) return res.status(403).end(); res.json(order);}catch(e){next(e)}
